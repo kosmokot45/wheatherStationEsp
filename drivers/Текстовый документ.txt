@@ -1,4 +1,0 @@
-http://127.0.0.1:5000/postWeatherData?Temp=26.2&Hum=63.0&Pres=1.00&Date=2023-06-05&Time=12:39
-http://127.0.0.1:5000/postWeatherData?Temp=14&Hum=20&Pres=1.0&Date=2023-06-05&Time=12:37
-
-http://127.0.0.1:5000/postWeatherData?Temp=26.2&Hum=63.0&Pres=1.00&Date=2023-06-05&Time=12:39
