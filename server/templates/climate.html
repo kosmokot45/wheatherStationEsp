@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+.center {
+    margin: auto;
+    width: 87%;
+    border: 0px solid #73AD21;
+    padding: 10px;
+}
+
+.top_right{
+    position: absolute;
+
+}
+
+.text_right {
+    float: right;
+}
+
+.text_left {
+    float: left;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {display:none;}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.margin_btn {
+  margin: 20px;
+}
+
+</style>
+    <meta charset="UTF-8">
+    <title>Контроль микроклимата</title>
+     <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
+    <link rel="stylesheet" href="/static/trafficLights.css" type="text/css">
+</head>
+<body>
+
+<div>
+    <form action="/logout" method="POST">
+        <input type="submit" value="Выход" class="btn btn-primary" style="position: absolute; top: 20px; right: 10px; width: 95px;height: 40px;">
+    </form>
+</div>
+
+<div>
+  <form action="/clients" method="POST">
+      <input type="submit" value="Клиенты" class="btn btn-primary" style="position: absolute; top: 80px; right: 10px; width: 95px;height: 40px;">
+  </form>
+</div>
+
+<div>
+  <form action="/" method="POST">
+      <input type="submit" value="Домой" class="btn btn-primary" style="position: absolute; top: 140px; right: 10px; width: 95px;height: 40px;">
+  </form>
+</div>
+
+
+<div class="center">
+  <div id="accordion">
+    <div class="card">
+      <div class="card-header" id="headingOne">
+        <h5 class="mb-0">
+          <button style="width:100%;" class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+            <h1> <div class="text_left"> Последнее обновление: {{ lastDataTime }} </div>  <div class="text_right">  &#11191; </div> </h1>
+          </button>
+        </h5>
+      </div>
+
+      <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+        <div class="div1">
+          <div class="card-body">
+                    <h4> Холодный цех </h4>
+                    <div class="card bg-light mb-3" style="max-width: 18rem;">
+                      
+                      <div class="card-header">
+                        {% if systemOn %}
+                            <h5>Система: ВКЛ</h5>
+                        {% else %}
+                            <h5>Система: ВЫКЛ</h5>
+                        {% endif %}
+                      </div>
+                      <div class="card-body">
+                        <h5 class="card-title"></h5>
+                            <div class="traffic-light">
+
+                                {% if systemOn %}
+                                  <input type="radio" name="rag1" class="color1" value="1">
+                                  <!-- <input type="radio" name="rag1" class="color2" value="2"> -->
+                                  <input type="radio" name="rag1" class="color3checked" value="3">
+                                {% else %}
+                                  <input type="radio" name="rag1" class="color1checked" value="1">
+                                  <!-- <input type="radio" name="rag1" class="color2" value="2"> -->
+                                  <input type="radio" name="rag1" class="color3" value="3">
+                                {% endif %}
+
+                            </div>
+                      </div>
+                    </div>
+
+                    <div class="card bg-light mb-3" style="max-width: 18rem;">
+                      <div class="card-header">
+                        {% if systemOn %}
+                          <h5>Свет: ВКЛ</h5>
+                        {% else %}
+                          <h5>Свет: ВЫКЛ</h5>
+                        {% endif %}
+                        {% if systemOn %}
+                          <h5>Вентиляция: ВКЛ</h5>
+                        {% else %}
+                          <h5>Вентиляция: ВЫКЛ</h5>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+                        <div class="card-header"><h5>Температура:</h5></div>
+                        <div class="card-body">
+                        <h5 class="card-title"></h5>
+                        <h3 class="card-text">{{ lastTemperature_freeze }}°C</h3>
+                      </div>
+                    </div>
+
+
+                      <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+                        <div class="card-header"><h5>Влажность:</h5></div>
+                        <div class="card-body">
+                        <h5 class="card-title"></h5>
+                        <h3 class="card-text">{{ lastHumidity_freeze }}%</h3>
+                      </div>
+                    </div>
+
+
+                    <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+                        <div class="card-header"><h5>Углекислый газ:</h5></div>
+                        <div class="card-body">
+                        <h5 class="card-title"></h5>
+                        <h3 class="card-text">{{ lastPpm_freeze }} CO2 (ppm)</h3>
+                    </div>
+                    </div>
+
+
+          </div>
+        </div>
+        <div class="div1">
+          <div class="card-body">
+            <h4> Цех выращивания 1 </h4>
+            <div class="card bg-light mb-3" style="max-width: 18rem;">
+              <div class="card-header">
+                {% if systemOn %}
+                    <h5>Система: ВКЛ</h5>
+                {% else %}
+                    <h5>Система: ВЫКЛ</h5>
+                {% endif %}
+              </div>
+              <div class="card-body">
+                <h5 class="card-title"></h5>
+                    <div class="traffic-light">
+
+                        {% if systemOn %}
+                          <input type="radio" name="rag1" class="color1" value="1">
+                          <!-- <input type="radio" name="rag1" class="color2" value="2"> -->
+                          <input type="radio" name="rag1" class="color3checked" value="3">
+                        {% else %}
+                          <input type="radio" name="rag1" class="color1checked" value="1">
+                          <!-- <input type="radio" name="rag1" class="color2" value="2"> -->
+                          <input type="radio" name="rag1" class="color3" value="3">
+                        {% endif %}
+
+                    </div>
+              </div>
+            </div>
+
+            <div class="card bg-light mb-3" style="max-width: 18rem;">
+              <div class="card-header">
+                {% if systemOn %}
+                  <h5>Свет: ВКЛ</h5>
+                {% else %}
+                  <h5>Свет: ВЫКЛ</h5>
+                {% endif %}
+                {% if systemOn %}
+                  <h5>Вентиляция: ВКЛ</h5>
+                {% else %}
+                  <h5>Вентиляция: ВЫКЛ</h5>
+                {% endif %}
+                {% if systemOn %}
+                  <h5>Полив: ВКЛ</h5>
+                {% else %}
+                  <h5>Полив: ВЫКЛ</h5>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+                <div class="card-header"><h5>Температура:</h5></div>
+                <div class="card-body">
+                <h5 class="card-title"></h5>
+                <h3 class="card-text">{{ lastTemperature_plant_1 }}°C</h3>
+              </div>
+            </div>
+
+
+              <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+                <div class="card-header"><h5>Влажность:</h5></div>
+                <div class="card-body">
+                <h5 class="card-title"></h5>
+                <h3 class="card-text">{{ lastHumidity_plant_1 }}%</h3>
+              </div>
+            </div>
+
+
+            <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+                <div class="card-header"><h5>Углекислый газ:</h5></div>
+                <div class="card-body">
+                <h5 class="card-title"></h5>
+                <h3 class="card-text">{{ lastPpm_plant_1 }} CO2 (ppm)</h3>
+            </div>
+            </div>
+
+
+          </div>
+        </div>
+        <div class="div1">
+          <div class="card-body">
+            <h4> Цех выращивания 2 </h4>
+      <div class="card bg-light mb-3" style="max-width: 18rem;">
+        <div class="card-header">
+          {% if systemOn %}
+              <h5>Система: ВКЛ</h5>
+          {% else %}
+              <h5>Система: ВЫКЛ</h5>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <h5 class="card-title"></h5>
+              <div class="traffic-light">
+
+                  {% if systemOn %}
+                    <input type="radio" name="rag1" class="color1" value="1">
+                    <!-- <input type="radio" name="rag1" class="color2" value="2"> -->
+                    <input type="radio" name="rag1" class="color3checked" value="3">
+                  {% else %}
+                    <input type="radio" name="rag1" class="color1checked" value="1">
+                    <!-- <input type="radio" name="rag1" class="color2" value="2"> -->
+                    <input type="radio" name="rag1" class="color3" value="3">
+                  {% endif %}
+
+              </div>
+        </div>
+      </div>
+
+      <div class="card bg-light mb-3" style="max-width: 18rem;">
+        <div class="card-header">
+          {% if systemOn %}
+            <h5>Свет: ВКЛ</h5>
+          {% else %}
+            <h5>Свет: ВЫКЛ</h5>
+          {% endif %}
+          {% if systemOn %}
+            <h5>Вентиляция: ВКЛ</h5>
+          {% else %}
+            <h5>Вентиляция: ВЫКЛ</h5>
+          {% endif %}
+          {% if systemOn %}
+            <h5>Полив: ВКЛ</h5>
+          {% else %}
+            <h5>Полив: ВЫКЛ</h5>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+          <div class="card-header"><h5>Температура:</h5></div>
+          <div class="card-body">
+          <h5 class="card-title"></h5>
+          <h3 class="card-text">{{ lastTemperature_plant_2 }}°C</h3>
+        </div>
+      </div>
+
+
+        <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+          <div class="card-header"><h5>Влажность:</h5></div>
+          <div class="card-body">
+          <h5 class="card-title"></h5>
+          <h3 class="card-text">{{ lastHumidity_plant_2 }}%</h3>
+        </div>
+      </div>
+
+
+      <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+          <div class="card-header"><h5>Углекислый газ:</h5></div>
+          <div class="card-body">
+          <h5 class="card-title"></h5>
+          <h3 class="card-text">{{ lastPpm_plant_2 }} CO2 (ppm)</h3>
+      </div>
+      </div>
+
+
+          </div>
+        </div>
+        <div class="div1">
+          <div class="card-body">
+            <h4>Компостный цех</h4>
+      <div class="card bg-light mb-3" style="max-width: 18rem;">
+        <div class="card-header">
+          {% if systemOn %}
+              <h5>Система: ВКЛ</h5>
+          {% else %}
+              <h5>Система: ВЫКЛ</h5>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <h5 class="card-title"></h5>
+              <div class="traffic-light">
+
+                  {% if systemOn %}
+                    <input type="radio" name="rag1" class="color1" value="1">
+                    <!-- <input type="radio" name="rag1" class="color2" value="2"> -->
+                    <input type="radio" name="rag1" class="color3checked" value="3">
+                  {% else %}
+                    <input type="radio" name="rag1" class="color1checked" value="1">
+                    <!-- <input type="radio" name="rag1" class="color2" value="2"> -->
+                    <input type="radio" name="rag1" class="color3" value="3">
+                  {% endif %}
+
+              </div>
+        </div>
+      </div>
+
+      <div class="card bg-light mb-3" style="max-width: 18rem;">
+        <div class="card-header">
+          {% if systemOn %}
+            <h5>Свет: ВКЛ</h5>
+          {% else %}
+            <h5>Свет: ВЫКЛ</h5>
+          {% endif %}
+          {% if systemOn %}
+            <h5>Вентиляция: ВКЛ</h5>
+          {% else %}
+            <h5>Вентиляция: ВЫКЛ</h5>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+          <div class="card-header"><h5>Температура:</h5></div>
+          <div class="card-body">
+          <h5 class="card-title"></h5>
+          <h3 class="card-text">{{ lastTemperature_compost }}°C</h3>
+        </div>
+      </div>
+
+
+        <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+          <div class="card-header"><h5>Влажность:</h5></div>
+          <div class="card-body">
+          <h5 class="card-title"></h5>
+          <h3 class="card-text">{{ lastHumidity_compost }}%</h3>
+        </div>
+      </div>
+
+
+      <div class="card text-white bg-primary mb-3" style="max-width: 18rem;">
+          <div class="card-header"><h5>Углекислый газ:</h5></div>
+          <div class="card-body">
+          <h5 class="card-title"></h5>
+          <h3 class="card-text">{{ lastPpm_compost }} CO2 (ppm)</h3>
+      </div>
+      </div>
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{%set dict_workshop = {'Климат в холодильном цехе':[temperaturePlot_freeze, humidityPlot_freeze, ppmPlot_freeze],
+                      'Климат в цехе выращивания 1':[temperaturePlot_plant_1, humidityPlot_plant_1, ppmPlot_plant_1],
+                      'Климат в цехе выращивания 2':[temperaturePlot_plant_2, humidityPlot_plant_2, ppmPlot_plant_2],
+                      'Климат в компостном цехе':[temperaturesPlot_compost, humidityPlot_compost, ppmPlot_compost]}%}
+
+{%set list = ['Климат в холодильном цехе', 'Климат в цехе выращивания 1', 'Климат в цехе выращивания 2', 'Климат в компостном цехе']%}
+{%set list_switch = ['Свет', 'Полив', 'Вентиляция']%}
+{%set list_switch_POST = ['lightSwitch', 'waterSwitch', 'ventSwitch']%}
+{%set light_1_On, light_2_On, light_3_On, light_4_On =True, True, False, False%}
+{%set vent_1_On, vent_2_On, vent_3_On, vent_4_On = True, True, False, False%}
+{%set water_1_On, water_2_On = True, True%}
+
+{%for name in list%}
+  <h1 class="ots">{{ name }}</h1>
+  <div class="center">
+  {%for el in dict_workshop[name]%}
+    <div class="div1">{{ el }}</div>
+  {%endfor%}
+  </div>
+  <!-- {%for name in list_switch%} -->
+  <!-- Свет -->
+  {%endfor%}
+  <div class="div1">
+    {% if name == 'Климат в холодильном цехе'%}
+      <form action="/ip_esp?lightSwitch=1" method="POST">
+        <input type="submit" value="Переключить" class="btn btn-primary" style="width: 125px; height: 40px;">
+      </form>
+      {% if light_1_On %}
+      <p>Свет: ВКЛ</p>
+      {% else %}
+      <p>Свет: ВЫКЛ</p>
+      {% endif %}
+    {%elif name == 'Климат в цехе выращивания 1'%}
+      <form action="/ip_esp?lightSwitch=2" method="POST">
+        <input type="submit" value="Переключить" class="btn btn-primary" style="width: 125px; height: 40px;">
+      </form>
+      {% if light_2_On %}
+      <p>Свет: ВКЛ</p>
+      {% else %}
+      <p>Свет: ВЫКЛ</p>
+      {% endif %}
+    {%elif name == 'Климат в цехе выращивания 2'%}
+      <form action="/ip_esp?lightSwitch=3" method="POST">
+        <input type="submit" value="Переключить" class="btn btn-primary" style="width: 125px; height: 40px;">
+      </form>
+      {% if light_3_On %}
+      <p>Свет: ВКЛ</p>
+      {% else %}
+      <p>Свет: ВЫКЛ</p>
+      {% endif %}
+    {%else%}
+      <form action="/ip_esp?lightSwitch=4" method="POST">
+        <input type="submit" value="Переключить" class="btn btn-primary" style="width: 125px; height: 40px;">
+      </form>
+      {% if light_4_On %}
+      <p>Свет: ВКЛ</p>
+      {% else %}
+      <p>Свет: ВЫКЛ</p>
+      {% endif %}
+    {% endif %}
+  </div>
+<!-- ВЕНТИЛЯЦИЯ -->
+  <div class="div1">
+    {% if name == 'Климат в холодильном цехе'%}
+      <form action="/ip_esp?ventSwitch=1" method="POST">
+        <input type="submit" value="Переключить" class="btn btn-primary" style="width: 125px; height: 40px;">
+      </form>
+      {% if vent_1_On %}
+      <p>Вентиляция: ВКЛ</p>
+      {% else %}
+      <p>Вентиляция: ВЫКЛ</p>
+      {% endif %}
+    {%elif name == 'Климат в цехе выращивания 1'%}
+      <form action="/ip_esp?ventSwitch=2" method="POST">
+        <input type="submit" value="Переключить" class="btn btn-primary" style="width: 125px; height: 40px;">
+      </form>
+      {% if vent_2_On %}
+      <p>Вентиляция: ВКЛ</p>
+      {% else %}
+      <p>Вентиляция: ВЫКЛ</p>
+      {% endif %}
+    {%elif name == 'Климат в цехе выращивания 2'%}
+      <form action="/ip_esp?ventSwitch=3" method="POST">
+        <input type="submit" value="Переключить" class="btn btn-primary" style="width: 125px; height: 40px;">
+      </form>
+      {% if vent_3_On %}
+      <p>Вентиляция: ВКЛ</p>
+      {% else %}
+      <p>Вентиляция: ВЫКЛ</p>
+      {% endif %}
+    {%else%}
+      <form action="/ip_esp?ventSwitch=4" method="POST">
+        <input type="submit" value="Переключить" class="btn btn-primary" style="width: 125px; height: 40px;">
+      </form>
+      {% if vent_4_On %}
+      <p>Вентиляция: ВКЛ</p>
+      {% else %}
+      <p>Вентиляция: ВЫКЛ</p>
+      {% endif %}
+    {% endif %}
+  </div>
+  <!-- ПОЛИВ -->
+  <div class="div1">
+    {% if name == 'Климат в цехе выращивания 1'%}
+      <form action="/ip_esp?waterSwitch=1" method="POST">
+        <input type="submit" value="Переключить" class="btn btn-primary" style="width: 125px; height: 40px;">
+      </form>
+      {% if water_1_On %}
+      <p>Полив: ВКЛ</p>
+      {% else %}
+      <p>Полив: ВЫКЛ</p>
+      {% endif %}
+    {%elif name == 'Климат в цехе выращивания 2'%}
+      <form action="/ip_esp?waterSwitch=2" method="POST">
+        <input type="submit" value="Переключить" class="btn btn-primary" style="width: 125px; height: 40px;">
+      </form>
+      {% if water_2_On %}
+      <p>Полив: ВКЛ</p>
+      {% else %}
+      <p>Полив: ВЫКЛ</p>
+      {% endif %}
+    {% endif %}
+  </div>
+{%endfor%}
+
+</body>
+</html>
