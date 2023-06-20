@@ -9,16 +9,17 @@ from datetime import datetime, timedelta
 import pytz
 from datetime import datetime
 import re
+import settings
 
 app = Flask(__name__)
-app.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3\x83\xb6"
+app.secret_key = settings.secret_key
 
 def connectToMySql():
     mydb = mysql.connector.connect(
-        host="localhost",
-        user="root1234",
-        password="OlOlO1234",
-        database="new_wheatherstation"
+        host=settings.db_host,
+        user=settings.db_user,
+        password=settings.db_pass,
+        database=settings.db_name,
     )
 
     return mydb
