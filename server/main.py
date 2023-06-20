@@ -172,13 +172,6 @@ def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route('/')
-def homePage():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
-        return render_template('home.html')
-
-@app.route('/climate')
 def climatePage():
     if not session.get('logged_in'):
         return render_template('login.html')
@@ -310,34 +303,12 @@ def do_admin_login():
         flash('Неверный email или password!')
     except Exception as e: print(e)
     mydb.close()
-    return homePage()
-    # return climatePage()W
+    return climatePage()
 
 @app.route("/logout", methods=['POST'])
 def logout():
     session['logged_in'] = False
     return render_template('login.html')
-
-@app.route("/clients", methods=['POST'])
-def clients():
-    return clientsPage()
-
-@app.route("/climate", methods=['POST'])
-def climate():
-    return climatePage()
-
-@app.route("/", methods=['POST'])
-def home():
-    return homePage()
-
-###############
-
-# @app.route("/switch", methods=['POST'])
-# def switchDevices():
-#     print(request.args.get('mycheckbox'))
-#     return homePage()
-
-###############
 
 #example query: /postWeatherData?Temp=3.4&Hum=86.4&Ppm=455.8&Workshop=1&Worker=2
 @app.route('/postWeatherData', methods=['GET', 'POST'])
