@@ -8,6 +8,7 @@ import logging
 from datetime import datetime, timedelta
 import pytz
 from datetime import datetime
+import re
 
 app = Flask(__name__)
 app.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3\x83\xb6"
@@ -17,10 +18,13 @@ def connectToMySql():
         host="localhost",
         user="root1234",
         password="OlOlO1234",
-        database="weatherstation"
+        database="new_wheatherstation"
     )
 
     return mydb
+
+def findData(pattern, data):
+    return re.match(pattern, data).group(1)
 
 def saveWeatherData(workshop, worker, temp, hum, ppm, date):
     result = False
@@ -38,49 +42,6 @@ def saveWeatherData(workshop, worker, temp, hum, ppm, date):
         mydb.close()
     return result
 
-def getClients():
-    mydb = connectToMySql()
-    try:
-        mycursor = mydb.cursor()
-        # собираем клиентов с менеджерами
-        query = 'select client_name, phone, user_login from client join user_table on client.worker_id = user_table.id'
-        mycursor.execute(query)
-        clients = mycursor.fetchall()
-        mydb.close()
-    except:
-        mydb.close()
-    return clients
-
-def getOrders():
-    mydb = connectToMySql()
-    try:
-        mycursor = mydb.cursor()
-
-        query = 'select date, product_name, count_product, sum, client_name, user_login from orders\
-                    join user_table on orders.worker_id = user_table.id\
-                    join client on orders.client_id = client.id\
-                    join product on orders.product_id = product.id'
-        mycursor.execute(query)
-        result = mycursor.fetchall()
-        mydb.close()
-    except:
-        mydb.close()
-    return result
-
-def getProducts():
-    mydb = connectToMySql()
-    try:
-        mycursor = mydb.cursor()
-
-        query = 'select * from product'
-        mycursor.execute(query)
-        result = mycursor.fetchall()
-        mydb.close()
-    except:
-        mydb.close()
-    return result
-
-
 def getLatestWeatherData():
     mydb = connectToMySql()
     try:
@@ -89,8 +50,9 @@ def getLatestWeatherData():
 
         query_list = []
         for workshop in workshop_numbers:
-            query = "SELECT date, worker_id, temperature, humidity, ppm FROM climate where workshop_id = " + str(workshop) + " ORDER BY date DESC LIMIT 1"
+            query = f"SELECT date, data FROM room_logs where roomid = {str(workshop)} ORDER BY date DESC LIMIT 1"
             query_list.append(query)
+
         mycursor.execute(query_list[0])
         result_freeze = mycursor.fetchall()
         mycursor.execute(query_list[1])
@@ -113,14 +75,11 @@ def checkSystemOn():
     systemOn = False
     IST = pytz.timezone('Europe/Rome')
     datetime_utc = datetime.now(IST)
-    #print("Date & Time in UTC : ", datetime_utc.strftime('%Y:%m:%d %H:%M:%S'))
     latestData = getLatestWeatherData()[0]
     lastDate = latestData[0][0]
-    #print("Latest Date : ", lastDate.strftime('%Y:%m:%d %H:%M:%S'))
     currentDateTime = datetime_utc.replace(tzinfo=None)
     lastDateTime = lastDate.replace(tzinfo=None)
     diffBetweenDates = currentDateTime-lastDateTime
-    #print("Difference: ", diffBetweenDates)
     if diffBetweenDates > timedelta(minutes=15):
         systemOn = False
     else:
@@ -128,15 +87,45 @@ def checkSystemOn():
     return systemOn
 
 def getSpecificData(dataToSelect, workshop):
+
+    pattern_temp = r'\S?T=(\d+\D?\d?);'
+    pattern_hum = r'\S+?H=(\d+\D?\d?);'
+    pattern_ppm = r'\S+?P=(\d+\D?\d?);'
+
     mydb = connectToMySql()
     mycursor = mydb.cursor()
 
-    query = "SELECT Date, " + dataToSelect + " FROM climate WHERE workshop_id = " + str(workshop)
+    query = f"SELECT date, data FROM room_logs WHERE roomid = {str(workshop)} ORDER BY date"
 
     mycursor.execute(query)
-    result = mycursor.fetchall()
+    data = mycursor.fetchall()
     mydb.close()
-    print(result)
+    print(data)
+    if dataToSelect == 'Temperature':
+        result = []
+        for el in data:
+            # print(el[1])
+            lst = []
+            lst.append(el[0])
+            lst.append(re.match(pattern_temp, el[1]).group(1))
+            result.append(lst)
+            
+    elif dataToSelect == 'Humidity':
+        result = []
+        for el in data:
+            # print(el[1])
+            lst = []
+            lst.append(el[0])
+            lst.append(re.match(pattern_hum, el[1]).group(1))
+            result.append(lst)
+    elif dataToSelect == 'Ppm':
+        result = []
+        for el in data:
+            # print(el[1])
+            lst = []
+            lst.append(el[0])
+            lst.append(re.match(pattern_ppm, el[1]).group(1))
+            result.append(lst)
     return result
 
 def createPlot(datas, dataType):
@@ -160,6 +149,7 @@ def createPlot(datas, dataType):
         "X": [],
         "Y": []
     }
+    # datas.sorted()
     for x in datas:
         dataDictionary["X"].append(x[0])
         dataDictionary["Y"].append(x[1])
@@ -181,17 +171,6 @@ def createPlot(datas, dataType):
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
-@app.route('/clients')
-def clientsPage():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
-        clients = getClients()
-        orders = getOrders()
-        products = getProducts()
-
-        return render_template("clients.html", clients=clients, len_clients = len(clients), orders=orders, len_orders=len(orders), products=products, len_products=len(products))
-    
 @app.route('/')
 def homePage():
     if not session.get('logged_in'):
@@ -211,22 +190,26 @@ def climatePage():
         latestData_plant_2 = latestWeatherData[2]
         latestData_compost = latestWeatherData[3]
 
+        pattern_temp = r'\S?T=(\d+\D?\d?);'
+        pattern_hum = r'\S+?H=(\d+\D?\d?);'
+        pattern_ppm = r'\S+?P=(\d+\D?\d?);'
+
         lastDataTime = latestData_plant_1[0][0]
 
-        lastTemperature_freeze = latestData_freeze[0][2]
-        lastHumidity_freeze = latestData_freeze[0][3]
-        lastPpm_freeze = latestData_freeze[0][4]
+        lastTemperature_freeze = findData(pattern_temp, latestData_freeze[0][1])
+        lastHumidity_freeze = findData(pattern_hum, latestData_freeze[0][1])
+        lastPpm_freeze = findData(pattern_ppm, latestData_freeze[0][1])
 
-        lastTemperature_plant_1 = latestData_plant_1[0][2]
-        lastTemperature_plant_2 = latestData_plant_2[0][2]
-        lastHumidity_plant_1 = latestData_plant_1[0][3]        
-        lastHumidity_plant_2 = latestData_plant_2[0][3]
-        lastPpm_plant_1 = latestData_plant_1[0][4]        
-        lastPpm_plant_2 = latestData_plant_1[0][4]
+        lastTemperature_plant_1 = findData(pattern_temp, latestData_plant_1[0][1])
+        lastTemperature_plant_2 = findData(pattern_temp, latestData_plant_2[0][1])
+        lastHumidity_plant_1 = findData(pattern_hum, latestData_plant_1[0][1])      
+        lastHumidity_plant_2 = findData(pattern_hum, latestData_plant_2[0][1])
+        lastPpm_plant_1 = findData(pattern_ppm, latestData_plant_1[0][1])     
+        lastPpm_plant_2 = findData(pattern_ppm, latestData_plant_2[0][1])
 
-        lastTemperature_compost = latestData_compost[0][2]
-        lastHumidity_compost = latestData_compost[0][3]
-        lastPpm_compost = latestData_compost[0][4]
+        lastTemperature_compost = findData(pattern_temp, latestData_compost[0][1])
+        lastHumidity_compost = findData(pattern_hum, latestData_compost[0][1])
+        lastPpm_compost = findData(pattern_ppm, latestData_compost[0][1])
         #get data to build temperatures plot
 
         # FREEZE
@@ -245,11 +228,11 @@ def climatePage():
 
         # PLANT
         table = 'plant_table'
-        temperatures_plant_1 = getSpecificData("temperature", 2)
+        temperatures_plant_1 = getSpecificData("Temperature", 2)
         temperaturesPlot_plant_1 = createPlot(temperatures_plant_1, "Temperature")
         temperaturesPlotHtml_plant_1 = Markup(temperaturesPlot_plant_1)
 
-        temperatures_plant_2 = getSpecificData("temperature", 3)
+        temperatures_plant_2 = getSpecificData("Temperature", 3)
         temperaturesPlot_plant_2 = createPlot(temperatures_plant_2, "Temperature")
         temperaturesPlotHtml_plant_2 = Markup(temperaturesPlot_plant_2)
         
@@ -318,7 +301,7 @@ def do_admin_login():
     mydb = connectToMySql()
     mycursor = mydb.cursor()
     try:
-        query = f"SELECT id FROM user_table WHERE user_login = '{request.form['email']}' AND user_password = MD5('{request.form['password']}')"
+        query = f"SELECT id FROM user_profile WHERE email = '{request.form['email']}' AND password = MD5('{request.form['password']}')"
         mycursor.execute(query)
         result = mycursor.fetchall()
         if result[0][0]>0:
@@ -328,12 +311,12 @@ def do_admin_login():
     except Exception as e: print(e)
     mydb.close()
     return homePage()
-    # return climatePage()
+    # return climatePage()W
 
 @app.route("/logout", methods=['POST'])
 def logout():
     session['logged_in'] = False
-    return climatePage()
+    return render_template('login.html')
 
 @app.route("/clients", methods=['POST'])
 def clients():
